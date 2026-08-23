@@ -1,0 +1,644 @@
+<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>종합소득세 계산기 — 금융소득 종합과세 · §62 비교과세</title>
+<style>
+:root{--ink:#16202b;--ink2:#5a6572;--ink3:#8a97a2;--line:#d7e2ea;--line2:#adc0ce;--line3:#7d93a5;
+--band:#f4f8fb;--acc:#1f5c94;--accbg:#e4eef7;--ok:#1a7a3c;--okbg:#e8f5e9;--bad:#b23a2e;--badbg:#fdf1ef;
+--warn:#8a6d1a;--warnbg:#fff3cd;--in:#fff8e1}
+*{box-sizing:border-box}
+body{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;color:var(--ink);margin:0;font-size:13px;line-height:1.5}
+.wrap{max-width:1360px;margin:0 auto;padding:18px 22px 60px}
+h1{font-size:19px;margin:0 0 3px}
+p.s{color:var(--ink2);font-size:11px;margin:0 0 14px}
+h2{font-size:13px;margin:20px 0 7px;padding-bottom:3px;border-bottom:2px solid var(--acc);color:var(--acc)}
+.grid{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+.card{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:#fff}
+.f{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}
+.f label{font-size:12px;color:var(--ink2);flex:1}
+.f input,.f select{width:140px;padding:4px 7px;border:1px solid var(--line2);border-radius:4px;background:var(--in);
+  text-align:right;font-family:Consolas,monospace;font-size:12px}
+.f select{background:#fff;text-align:left}
+.f input:focus{outline:2px solid var(--acc);background:#fff}
+.f.hd{border-top:1px solid var(--line);margin-top:9px;padding-top:8px}
+.f.hd label{font-weight:700;color:var(--ink)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th{background:var(--acc);color:#fff;font-size:11px;padding:5px 7px;text-align:left}
+th.n{text-align:right}
+td{border-bottom:1px solid var(--line);padding:3px 7px}
+td.n{text-align:right;font-family:Consolas,monospace}
+td.lbl{color:var(--ink2)}
+tr.k td{background:var(--band);font-weight:700}
+tr.k2 td{background:var(--accbg);font-weight:700;border-top:1.5px solid var(--line3)}
+tr.dim td{color:var(--ink3)}
+.pos{color:var(--bad)}.neg{color:var(--ok)}
+.bar{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+button{font-family:inherit;font-size:12px;padding:5px 12px;border:1px solid var(--line2);background:#fff;border-radius:6px;cursor:pointer}
+button:hover{background:var(--band)}
+button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
+.badge{display:inline-block;padding:3px 10px;border-radius:11px;font-size:11px;font-weight:700}
+.b-ok{background:var(--okbg);color:var(--ok)}.b-bad{background:var(--badbg);color:var(--bad)}.b-mut{background:var(--band);color:var(--ink3)}
+.note{background:var(--band);border:1px solid var(--line);padding:8px 11px;font-size:11px;border-radius:6px;margin:9px 0}
+.note.w{background:var(--warnbg);border-color:var(--warn)}
+.vt td{font-size:11px}
+@media print{.bar{display:none}}
+
+@media print{
+  #phdr{ display:block!important; }
+  @page{ size:A4 portrait; margin:10mm 9mm; }
+  html,body{ background:#fff!important; color:#000!important; font-size:9.5pt; }
+  .wrap{ max-width:none; padding:0; }
+  /* 조작 요소는 인쇄하지 않는다 */
+  .bar, .tabs, #drop, #pdff, #pastebox, #pmsg, .note.w > span[style*="b23a2e"]{ display:none!important; }
+  #pastebox, .card .f.hd + div[style*="dashed"]{ display:none!important; }
+  button, input[type=file], textarea{ display:none!important; }
+  /* 입력칸을 값 텍스트로 — 상자·배경 제거 */
+  input.q, .f input, .f select{
+    border:none!important; background:transparent!important; padding:0!important;
+    width:auto!important; min-width:70px; text-align:right;
+    font-family:Consolas,'Courier New',monospace; font-size:9.5pt; color:#000!important;
+    -webkit-appearance:none; appearance:none;
+  }
+  .f{ border-bottom:0.3pt solid #999; padding:1pt 0; margin:0; }
+  .f label{ font-size:9pt; color:#000!important; }
+  .f label span{ display:none!important; }
+  .f.hd{ border-top:0.8pt solid #000; border-bottom:none; margin-top:4pt; }
+  .f.hd label{ font-weight:700; }
+  /* 배경 없이 테두리로 구분 — 래스터화 회피 */
+  th{ background:#fff!important; color:#000!important; border-top:0.8pt solid #000;
+      border-bottom:0.8pt solid #000; font-weight:700; padding:2pt 3pt; }
+  td{ border-bottom:0.3pt solid #bbb; padding:1.5pt 3pt; color:#000!important; }
+  tr.k td, tr.k2 td, tr.sub td, tr.dim td, tr.bad td, tr.warn td, tr.hold td{
+      background:#fff!important; color:#000!important; }
+  tr.k td{ border-top:0.5pt solid #000; font-weight:700; }
+  tr.k2 td{ border-top:0.8pt solid #000; border-bottom:0.8pt solid #000; font-weight:700; }
+  .badge, .pill{ background:#fff!important; color:#000!important; border:0.3pt solid #000;
+      padding:0 3pt; font-weight:700; }
+  .card{ border:0.5pt solid #666; padding:4pt 6pt; }
+  .note{ background:#fff!important; border:0.3pt solid #666; padding:3pt 5pt; font-size:8.5pt; }
+  .note.w{ border-color:#000; }
+  .eq{ background:#fff!important; border:0.3pt solid #666; }
+  h1{ font-size:13pt; } h2{ font-size:10.5pt; border-bottom:0.8pt solid #000; color:#000!important;
+      margin:8pt 0 3pt; page-break-after:avoid; }
+  p.s{ font-size:8pt; color:#333!important; }
+  .grid{ display:block; }
+  .grid > div:first-child{ float:left; width:47%; }
+  .grid > div:last-child{ float:right; width:51%; }
+  .grid:after{ content:""; display:block; clear:both; }
+  #p1,#p2,#p3,#p4{ clear:both; }
+  table{ page-break-inside:auto; }
+  tr{ page-break-inside:avoid; }
+  .scroll{ max-height:none!important; overflow:visible!important; border:none!important; }
+  .pane{ display:block!important; }
+  a{ color:#000!important; text-decoration:none; }
+  /* 색 정보를 잃는 대신 기호로 대체 */
+  .pos:before{ content:"▲ "; } .neg:before{ content:"▼ "; }
+}
+</style><script src="vendor/pdf.min.js"></script>
+</head><body><div class=wrap>
+
+<div id=phdr style="display:none">
+  <div style="font-size:8.5pt;text-align:right;border-bottom:0.5pt solid #000;padding-bottom:2pt;margin-bottom:4pt">
+    <span id=phdr_y></span> · 출력 <span id=phdr_d></span> · <span id=phdr_b></span>
+  </div></div>
+<h1>종합소득세 계산기 — 금융소득 종합과세</h1>
+<p class=s><b style="color:#1f5c94">BUILD 2026-08-23e</b> · 소득세법 §62 비교과세 · 신고서 ⑰ 산출세액계산서(금융소득자용) 전개 순서 · 원 미만 절사</p>
+
+<div class=bar>
+  <button class=pri onclick="presetDemo()">예시값 불러오기</button>
+  <button onclick="verify()">검증 실행</button>
+  <button onclick="ex()">상태 저장 (.json)</button>
+  <button onclick="document.getElementById('imp').click()">상태 복원 (.json)</button>
+  <input type=file id=imp accept=".json,application/json" style="display:none" onchange="im(this)">
+  <button onclick="window.print()">인쇄</button>
+  <span id=vb></span>
+</div>
+
+<div class=grid>
+<div>
+  <div class=card>
+    <div class="f hd"><label>귀속연도</label><select id=year>
+      <option>2021</option><option>2022</option><option>2023</option><option selected>2024</option><option>2025</option></select></div>
+    <div class=f><label>Gross-up 가산율 %</label><input id=gur value="10" oninput="calc()"></div>
+    <div class=note style="margin:6px 0 0;font-size:10px" id=rt></div>
+
+    <div class="f hd"><label>금융소득</label><span></span></div>
+    <div class=f><label>이자소득</label><input id=intc value="0" oninput="calc()"></div>
+    <div class=f><label>배당 — Gross-up 대상</label><input id=divg value="0" oninput="calc()"></div>
+    <div class=f><label>배당 — 그 외(국외 등)</label><input id=divo value="0" oninput="calc()"></div>
+    <div class=f><label>① 비영업대금이익 (25%)</label><input id=nbl25 value="0" oninput="calc()"></div>
+    <div class=f><label>⒜ 비영업대금이익 (14%)</label><input id=nbl14 value="0" oninput="calc()"></div>
+    <div class=f><label>② 원천징수되지 않은 이자</label><input id=intn value="0" oninput="calc()"></div>
+    <div class=f><label>③ 원천징수되지 않은 비영업대금</label><input id=nbl value="0" oninput="calc()"></div>
+    <div class=f><label>⑦ 원천징수되지 않은 배당</label><input id=divn value="0" oninput="calc()"></div>
+
+    <div class="f hd"><label>그 밖의 종합소득</label><span></span></div>
+    <div class=f><label>금융외 종합소득금액</label><input id=oth value="0" oninput="calc()"></div>
+    <div class=f><label>소득공제</label><input id=ded value="0" oninput="calc()"></div>
+
+    <div class="f hd"><label>세액공제</label><span></span></div>
+    <div class=f><label>외국납부세액공제 §57</label><input id=ftc value="0" oninput="calc()"></div>
+    <div class=f><label>그 밖의 세액공제</label><input id=etc value="0" oninput="calc()"></div>
+
+    <div class="f hd"><label>기납부세액</label><span></span></div>
+    <div class=f><label>이자소득 원천</label><input id=pi value="0" oninput="calc()"></div>
+    <div class=f><label>배당소득 원천</label><input id=pd value="0" oninput="calc()"></div>
+    <div class=f><label>그 밖의 원천</label><input id=po value="0" oninput="calc()"></div>
+
+    <div id=adjpanel style="display:none">
+    <div class="f hd"><label>경정 시나리오 (경정열에만 반영)</label><span></span></div>
+    <div class=f><label>① ROC 취득가이내분 <span style="color:#1a7a3c;font-weight:700">감액</span><br><span style="font-size:10px;color:#8a97a2">배당 — 그 외에서 차감 (과표 ↓)</span></label><input id=roc value="0" oninput="calc()"></div>
+    <div class=f><label>② 배당 — 그 외 <span style="color:#b23a2e;font-weight:700">증액</span><br><span style="font-size:10px;color:#8a97a2">양수 = 배당 증가 · 음수 = 감소 (과표 ↑↓)</span></label><input id=divoadj value="0" oninput="calc()"></div>
+    <div class=f><label>③ 배당 원천세 과다징수 <span style="color:#1a7a3c;font-weight:700">감액</span><br><span style="font-size:10px;color:#8a97a2">기납부에서 차감 · ① 의 짝항목</span></label><input id=rocw value="0" oninput="calc()"></div>
+    <div class=f><label>④ 외국납부세액공제 <span style="color:#b23a2e;font-weight:700">증액</span><br><span style="font-size:10px;color:#8a97a2">§57 · 당초 누락분 (세액공제 ↑)</span></label><input id=ftcadd value="0" oninput="calc()"></div>
+    <div class=f><label>⑤ 그 밖의 세액공제 <span style="color:#b23a2e;font-weight:700">증액</span></label><input id=etcadd value="0" oninput="calc()"></div>
+    <div class=f><label>⑥ 기납부세액 <span style="color:#b23a2e;font-weight:700">증액</span><br><span style="font-size:10px;color:#8a97a2">양수 = 기납부 증가 · 음수 = 감소</span></label><input id=preadd value="0" oninput="calc()"></div>
+    </div>
+  </div>
+
+  <div class=card style="margin-top:14px">
+    <div class="f hd"><label>신고서 불러오기</label><span></span></div>
+    <div id=drop style="border:2px dashed var(--line2);border-radius:8px;padding:16px 12px;text-align:center;
+      font-size:12px;color:var(--ink2);cursor:pointer;background:var(--band)">
+      신고서 PDF 를 여기에 끌어놓거나 클릭<br><span style="font-size:10px">홈택스 미리보기 PDF · 여러 연도 각각</span>
+    </div>
+    <input type=file id=pdff accept="application/pdf" style="display:none">
+    <div style="margin-top:8px">
+      <div style="font-size:11px;color:var(--ink2);margin-bottom:3px">또는 PDF 를 열어 전체선택·복사한 텍스트를 붙여넣기</div>
+      <textarea id=pastebox rows=3 style="width:100%;font-size:11px;font-family:Consolas,monospace;
+        border:1px solid var(--line2);border-radius:4px;padding:5px" placeholder="여기에 붙여넣고 아래 버튼"></textarea>
+      <button style="margin-top:5px" onclick="parseText(document.getElementById('pastebox').value)">붙여넣은 텍스트에서 읽기</button>
+    </div>
+    <div id=pmsg style="font-size:11px;margin-top:8px"></div>
+  </div>
+  <div class=note>ROC 취득가이내분은 「배당 — 그 밖」에서 차감하여 경정열을 산출한다.
+  배당 원천세 정정액은 기납부세액에서 차감한다. 둘 다 0이면 경정열은 정본열과 같다.</div>
+</div>
+
+<div>
+  <h2>결과 요약</h2>
+  <table id=sum></table>
+  <h2>산출세액 계산 전개 — 신고서 ⑰</h2>
+  <table id=det></table>
+  <h2>검증</h2>
+  <table id=ver class=vt></table>
+  <div class=note w><b>입력값은 브라우저 안에서만 처리되며 서버로 전송되지 않는다.</b>
+  본 계산기는 금융소득 종합과세와 §62 비교과세를 재현한다.
+  외국납부세액공제 한도(§57), 감면, 가산세, 농어촌특별세, 지방소득세는 산출하지 않는다.
+  지방소득세는 결정세액의 10%로 위택스에 별도 신고한다. 최종 확정과 신고·경정 결정은 세무대리인·과세관청의 권한이다.
+  본 도구는 참고용이며 산출 결과에 대하여 어떠한 책임도 지지 아니한다.<br>
+  PDF 판독에 Mozilla pdf.js (Apache-2.0) 를 사용한다.</div>
+</div>
+</div>
+
+<script>
+if(typeof pdfjsLib!=="undefined") pdfjsLib.GlobalWorkerOptions.workerSrc="vendor/pdf.worker.min.js";
+var RATE23=[[14e6,.06,0],[50e6,.15,1260000],[88e6,.24,5760000],[150e6,.35,15440000],
+[300e6,.38,19940000],[500e6,.40,25940000],[1000e6,.42,35940000],[Infinity,.45,65940000]];
+var RATE21=[[12e6,.06,0],[46e6,.15,1080000],[88e6,.24,5220000],[150e6,.35,14900000],
+[300e6,.38,19400000],[500e6,.40,25400000],[1000e6,.42,35400000],[Infinity,.45,65400000]];
+var THR=20000000, SEP=0.14;
+function tbl(y){return y>=2023?RATE23:RATE21;}
+function tax(base,y){ if(base<=0)return 0; var T=tbl(y);
+  for(var i=0;i<T.length;i++){ if(base<=T[i][0]) return Math.floor(base*T[i][1]-T[i][2]); } return 0; }
+function v(id){ var x=String(document.getElementById(id).value).replace(/[, ]/g,''); var n=Number(x); return isNaN(n)?0:n; }
+function f(n){ return (n===''||n===null||isNaN(n))?'':Math.round(n).toLocaleString('ko-KR'); }
+
+var r0nb,r0dn,r0in;
+function run(divoAdj, pdAdj, ftcAdd, etcAdd, preAdd){
+  var y=+document.getElementById('year').value, gur=v('gur')/100;
+  var I0=v('intc'), IN=v('intn'), NBL=v('nbl'), DN=v('divn'), N25=v('nbl25'), N14=v('nbl14');
+  var I=I0+IN+NBL+N25+N14, DG=v('divg'), DO=v('divo')-divoAdj+DN, OTH=v('oth'), DED=v('ded');
+  var fin=I+DG+DO, GU=Math.floor(DG*gur), comp=fin>THR;
+  r0nb=NBL; r0dn=DN; r0in=IN;
+  var r={y:y,fin:fin,GU:GU,comp:comp,DG:DG,DO:DO,I:I,OTH:OTH,DED:DED,IN:IN,NBL:NBL,DN:DN,N25:N25,N14:N14};
+  if(comp){
+    r.excess=fin-THR;
+    r.base1=Math.max(0,r.excess+GU+OTH-DED);
+    r.t1=tax(r.base1,y); r.thr14=Math.floor(THR*SEP); r.comp1=r.t1+r.thr14;
+    r.base2=Math.max(0,OTH-DED); r.t2=tax(r.base2,y);
+    r.f22=Math.floor((N25+NBL)*0.25)+Math.floor(N14*SEP);   /* ㉒ 비영업대금이익 */
+    r.f23=fin-(N25+N14+NBL);                                 /* ㉓ 그 외 금융소득 */
+    r.fin14=Math.floor(r.f23*SEP);                           /* ㉔ */
+    r.comp2=r.f22+r.fin14+r.t2;
+    r.S=Math.max(r.comp1,r.comp2);
+    r.dc=Math.max(0,Math.min(GU,r.comp1-r.comp2));
+  } else {
+    r.base2=Math.max(0,OTH-DED); r.t2=tax(r.base2,y);
+    r.f32=Math.floor((IN+DN)*SEP);            /* ㉜ 원천징수되지 않은 이자·배당 × 14% */
+    r.f33=Math.floor((NBL+N25)*0.25)+Math.floor(N14*SEP);  /* ㉝ 비영업대금이익 */
+    r.S=r.f32+r.f33+r.t2;
+    r.dc=0; r.comp1=0; r.comp2=r.S; r.fin14=0; r.thr14=0; r.t1=0; r.base1=0; r.excess=0;
+  }
+  r.ftc=v('ftc')+(ftcAdd||0); r.etc=v('etc')+(etcAdd||0);
+  r.credit=r.dc+r.ftc+r.etc;
+  r.decided=Math.max(0,r.S-r.credit);
+  r.prepaid=v('pi')+v('pd')-pdAdj+v('po')+(preAdd||0);
+  r.due=r.decided-r.prepaid;
+  r.local=Math.floor(r.decided*0.1);
+  return r;
+}
+
+function row(t,label,a,b,cls){
+  var d=(b===null)?null:(b-a);
+  var dc=d===null?'':(d>0?'pos':(d<0?'neg':''));
+  return '<tr class="'+(cls||'')+'"><td class=lbl>'+label+'</td><td class=n>'+f(a)+'</td>'+
+    (b===null?'<td class=n></td><td class=n></td>':'<td class=n>'+f(b)+'</td><td class="n '+dc+'">'+(d===0?'0':(d>0?'+':'')+f(d))+'</td>')+'</tr>';
+}
+
+function calc(){
+  var A=run(0,0,0,0,0),
+      B=run(v('roc')-v('divoadj'), v('rocw'), v('ftcadd'), v('etcadd'), v('preadd'));
+  var h='<tr><th>구분</th><th class=n>정본 신고</th><th class=n>ROC 경정</th><th class=n>차이</th></tr>';
+  h+=row(0,'금융소득금액 ⑩',A.fin,B.fin);
+  h+=row(0,'배당가산액 Gross-up',A.GU,B.GU);
+  h+=row(0,'과세방식',null,null)+'';
+  h=h.replace('<td class=lbl>과세방식</td><td class=n></td><td class=n></td><td class=n></td>',
+    '<td class=lbl>과세방식</td><td class=n colspan=3 style="text-align:left">'+(A.comp?'종합과세 (2천만원 초과 · §62 비교과세)':'분리과세 (2천만원 이하 · 14% 종결)')+'</td>');
+  h+=row(0,'산출세액 ㉛',A.S,B.S,'k');
+  h+=row(0,'배당세액공제',A.dc,B.dc);
+  h+=row(0,'외국납부세액공제 §57',A.ftc,B.ftc);
+  h+=row(0,'그 밖의 세액공제',A.etc,B.etc);
+  h+=row(0,'세액공제 계',A.credit,B.credit);
+  h+=row(0,'결정세액 ❹26',A.decided,B.decided,'k');
+  h+=row(0,'기납부세액 ❹32',A.prepaid,B.prepaid);
+  if(v('rocw')!==0) h+=row(0,'&nbsp;&nbsp;├ 배당 원천세 과다징수 감액',0,-v('rocw'),'dim');
+  if(v('preadd')!==0) h+=row(0,'&nbsp;&nbsp;└ 그 밖의 기납부 증감',0,v('preadd'),'dim');
+  h+=row(0,'납부(환급)할 총세액 ❹33',A.due,B.due,'k2');
+  h+=row(0,'지방소득세 10% (위택스 별도)',A.local,B.local,'dim');
+  document.getElementById('sum').innerHTML=h;
+
+  var d='<tr><th>항</th><th>내용</th><th class=n>정본</th><th class=n>경정</th></tr>';
+  function dr(k,l,a,b,c){ d+='<tr class="'+(c||'')+'"><td class=lbl>'+k+'</td><td>'+l+'</td><td class=n>'+f(a)+'</td><td class=n>'+f(b)+'</td></tr>'; }
+  if(A.comp){
+    dr('⑤','이자소득 합계',A.I,B.I);
+    dr('⑨','배당소득 합계',A.DG+A.DO,B.DG+B.DO);
+    dr('⑩','금융소득금액',A.fin,B.fin,'k');
+    dr('⑪','종합과세기준금액',THR,THR);
+    dr('⑫','기준초과금액',A.excess,B.excess);
+    dr('⑬','배당가산액',A.GU,B.GU);
+    dr('⑭','금융소득 외 종합소득',A.OTH,B.OTH);
+    dr('⑮','기준금액 외 종합소득금액',A.excess+A.GU+A.OTH,B.excess+B.GU+B.OTH);
+    dr('⑯','소득공제',A.DED,B.DED);
+    dr('⑰','과세표준 (기준금액 2천만원 제외분)',A.base1,B.base1,'k');
+    dr('⑲','산출세액 (기본세율)',A.t1,B.t1);
+    dr('⑳','기준금액 × 14%',A.thr14,B.thr14);
+    dr('㉑','비교산출세액 계 (종합)',A.comp1,B.comp1,'k');
+    dr('㉒','비영업대금이익 [①×25% + ⒜×14%]',A.f22,B.f22);
+    dr('㉓','비영업대금 외 금융소득',A.f23,B.f23);
+    dr('㉔','× 14%',A.fin14,B.fin14);
+    dr('㉗','금융외 과세표준',A.base2,B.base2);
+    dr('㉙','산출세액',A.t2,B.t2);
+    dr('㉚','비교산출세액 계 (분리)',A.comp2,B.comp2,'k');
+    dr('㉛','종합소득산출세액 = MAX(㉑,㉚)',A.S,B.S,'k2');
+    dr('㊵','배당세액공제 = MIN(⑬, ㉛−㉚)',A.dc,B.dc);
+    dr('❹19','종합소득금액',A.fin+A.GU+A.OTH,B.fin+B.GU+B.OTH);
+    dr('❹21','과세표준 (❹19 − 소득공제) · ⑰과 2천만원 차이',Math.max(0,(A.fin+A.GU+A.OTH)-A.DED),Math.max(0,(B.fin+B.GU+B.OTH)-B.DED));
+  } else {
+    dr('①','비영업대금이익 (25%)',A.N25,B.N25);
+    dr('②','원천징수되지 않은 이자',A.IN,B.IN);
+    dr('③','원천징수되지 않은 비영업대금',A.NBL,B.NBL);
+    dr('⑦','원천징수되지 않은 배당',A.DN,B.DN);
+    dr('㉜','(②＋⑦) × 14%',A.f32,B.f32,'k');
+    dr('㉝','③ × 25%',A.f33,B.f33,'k');
+    dr('㉞','금융소득 외 종합소득',A.OTH,B.OTH);
+    dr('㊱','과세표준',A.base2,B.base2);
+    dr('㊳','산출세액 (기본세율)',A.t2,B.t2);
+    dr('㊴','종합소득산출세액 (㉜＋㉝＋㊳)',A.S,B.S,'k2');
+    d+='<tr class=dim><td></td><td colspan=3>금융소득 2천만원 이하 — 14% 원천징수로 종결. ROC 정정은 원천세 환급으로 실현된다.</td></tr>';
+  }
+  document.getElementById('det').innerHTML=d;
+  window._A=A; window._B=B;
+}
+
+/* 검증 기준은 사용자가 불러온 신고서 PDF 에서 자동 등록된다.
+   배포본에는 어떤 실제 신고자료도 포함하지 않는다. */
+var BASE={};
+
+function verify(){
+  var A=window._A; if(!A){calc();A=window._A;}
+  var y=+document.getElementById('year').value;
+  var got={ '⑩ 금융소득금액':A.fin,'⑤ 이자소득 합계':A.I,'⑨ 배당소득 합계':A.DG+A.DO,
+    '⑰ 과세표준':A.base1,'⑲ 산출세액':A.t1,
+    '⑫ 기준초과금액':A.excess,'⑬ 배당가산액':A.GU,'⑮ 기준금액 외 종합소득':A.excess+A.GU+A.OTH,
+    '㉗ 금융외 과세표준':A.base2,'㉒ 비영업대금이익':A.f22,'㉓ 비영업대금 외 금융소득':A.f23,
+    '❹19 종합소득금액':A.fin+A.GU+A.OTH,
+    '❹21 과세표준':Math.max(0,(A.fin+A.GU+A.OTH)-A.DED),
+    '❹23 산출세액':A.S,
+    '㉑ 비교산출세액(종합)':A.comp1,'㉔ 금융소득×14%':A.fin14,'㉙ 금융외 산출세액':A.t2,
+    '㉚ 비교산출세액(분리)':A.comp2,'㉛ 종합소득산출세액':A.S,'㊵ 배당세액공제':A.dc,
+    '세액공제 합계':A.credit,'❹26 결정세액':A.decided,'❹32 기납부세액':A.prepaid,'❹33 납부할 총세액':A.due };
+  var ref=BASE[y];
+  if(!ref){
+    var h2='<tr><th>산출 항목</th><th class=n>계산기</th><th>비고</th></tr>';
+    for(var k2 in got) h2+='<tr><td class=lbl>'+k2+'</td><td class=n>'+f(got[k2])+'</td><td class=lbl></td></tr>';
+    h2+='<tr class=dim><td colspan=3>'+y+'귀속 대조 기준값이 등록되어 있지 않다. 신고서 정본을 확보하면 BASE 에 추가하여 검증할 수 있다.</td></tr>';
+    document.getElementById('ver').innerHTML=h2;
+    document.getElementById('vb').innerHTML='<span class="badge b-mut">'+y+'귀속 기준값 없음 · 대조 생략</span>';
+    return;
+  }
+  var h='<tr><th>검증 항목</th><th class=n>계산기</th><th class=n>'+ref.label+'</th><th class=n>차이</th><th>판정</th></tr>', ok=0, n=0;
+  for(var k in ref){ if(k==='label') continue; n++;
+    var g=got[k], e=ref[k], dd=g-e; if(dd===0)ok++;
+    h+='<tr><td class=lbl>'+k+'</td><td class=n>'+f(g)+'</td><td class=n>'+f(e)+'</td><td class="n '+(dd?'pos':'')+'">'+f(dd)+'</td><td>'+
+    (dd===0?'<span class="badge b-ok">일치</span>':'<span class="badge b-bad">불일치</span>')+'</td></tr>'; }
+  document.getElementById('ver').innerHTML=h;
+  document.getElementById('vb').innerHTML='<span class="badge '+(ok===n?'b-ok':'b-bad')+'">'+y+'귀속 검증 '+ok+' / '+n+'</span>';
+}
+
+function presetDemo(){
+  /* 공개 예시값 — 실제 신고자료가 아니다. 세율구간 확인용 가상 수치. */
+  var s={year:'2024',gur:'10',intc:'12000000',nbl25:'0',nbl14:'0',intn:'0',nbl:'0',divn:'0',
+    divg:'1000000',divo:'30000000',oth:'40000000',ded:'3000000',
+    ftc:'0',etc:'700000',pi:'1680000',pd:'4340000',po:'2000000',
+    roc:'0',divoadj:'0',rocw:'0',ftcadd:'0',etcadd:'0',preadd:'0'};
+  for(var k in s) document.getElementById(k).value=s[k];
+  GURLOCK=true; onYear(); GURLOCK=false; verify();
+}
+function ex(){ var s={}; ['year','gur','intc','nbl25','nbl14','intn','nbl','divn','divg','divo','oth','ded','ftc','etc','pi','pd','po','roc','divoadj','rocw','ftcadd','etcadd','preadd']
+  .forEach(function(k){s[k]=document.getElementById(k).value;});
+  var b=new Blob(['\ufeff'+JSON.stringify({input:s,result:{정본:window._A,경정:window._B},saved:new Date().toISOString()},null,2)],{type:'application/json'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='종소세계산_'+s.year+'귀속.json'; a.click(); }
+function im(inp){ var fl=inp.files[0]; if(!fl)return;
+  if(/\.pdf$/i.test(fl.name) || fl.type==='application/pdf'){
+    inp.value='';
+    pmsg('PDF 는 이 버튼이 아니라 아래 「신고서 불러오기」 상자에 넣어야 한다. 자동으로 넘긴다.','mut');
+    document.getElementById('drop').scrollIntoView({behavior:'smooth',block:'center'});
+    readPDF(fl); return;
+  }
+  var r=new FileReader();
+  r.onload=function(){
+    var txt=String(r.result);
+    if(txt.slice(0,5)==='%PDF-'){ pmsg('PDF 파일이다. 「신고서 불러오기」 상자를 사용할 것.','bad'); return; }
+    try{ var j=JSON.parse(txt);
+      if(!j.input){ pmsg('이 계산기가 저장한 상태 파일이 아니다.','bad'); return; }
+      for(var k in j.input) if(document.getElementById(k)) document.getElementById(k).value=j.input[k];
+      onYear(); pmsg('상태 복원 완료','ok');
+    } catch(e){ pmsg('상태 복원 실패 — .json 파일인지 확인. ('+e.message.slice(0,40)+')','bad'); }
+  }; r.readAsText(fl); inp.value=''; }
+function onYear(){
+  var y=+document.getElementById('year').value;
+  if(!GURLOCK) document.getElementById('gur').value = (y>=2024)?'10':'11';
+  document.getElementById('rt').textContent = (y>=2023)
+    ? '2023년 이후 세율표 — 1,400만 6% · 5,000만 15% · 8,800만 24% · 1.5억 35% · 3억 38% · 5억 40% · 10억 42% · 초과 45%'
+    : '2022년 이전 세율표 — 1,200만 6% · 4,600만 15% · 8,800만 24% · 1.5억 35% · 3억 38% · 5억 40% · 10억 42% · 초과 45%';
+  document.getElementById('rt').textContent += '  ·  Gross-up 가산율 기본값 ' + ((y>=2024)?'10%':'11%') + ' (2022·2023 신고서 11% · 2024 신고서 10% 실증)';
+  calc(); verify();
+}
+document.getElementById('year').addEventListener('change', onYear);
+
+/* ═══ 신고서 파서 ═══ */
+function num(x){ return x==null?null:Number(String(x).replace(/[^\d\-]/g,'')); }
+function g1(t,re){ var m=t.match(re); return m?num(m[1]):null; }
+
+function parseText(raw){
+  if(!raw || raw.trim().length<50){ pmsg('붙여넣은 내용이 없거나 너무 짧다.','bad'); return; }
+  var t = raw.replace(/\u00a0/g,' ').replace(/[ \t]+/g,' ');
+  var flat = t.replace(/\s+/g,' ');
+  /* pdf.js 는 글자마다 공백을 넣어 반환하는 경우가 있다.
+     ( 2 0 2 5 년 귀 속 )  →  (2025년귀속)
+     자간공백을 제거한 사본을 만들어 정규식이 양쪽 모두에 걸리게 한다. */
+  var tight = flat
+    .replace(/(?<=\d) (?=[\d,])/g,'')      /* 숫자·쉼표 사이 */
+    .replace(/(?<=[가-힣]) (?=[가-힣])/g,'') /* 한글 사이 */
+    .replace(/(?<=[가-힣]) (?=[\d(])/g,'')  /* 한글→숫자·괄호 */
+    .replace(/(?<=[\d)]) (?=[가-힣])/g,'')  /* 숫자·괄호→한글 */
+    .replace(/(?<=[(－\-]) (?=\d)/g,'')
+    .replace(/(?<=\d) (?=[)－\-])/g,'')
+    .replace(/\(\s+/g,'(').replace(/\s+\)/g,')');
+  var nospace = t.split('\n').map(function(L){ return L.replace(/[ \t]+/g,''); }).join('\n');
+  var SRC=[flat, tight, nospace];
+  function G(re){ for(var i=0;i<SRC.length;i++){ var m=SRC[i].match(re); if(m) return num(m[1]); } return null; }
+  function GS(re){ for(var i=0;i<SRC.length;i++){ var m=SRC[i].match(re); if(m) return m[1]; } return null; }
+  var F={};
+  F.year   = (function(){ var v=GS(/\((\d{4})\s*년\s*귀\s*속\)/); if(v) return +v;
+                            v=GS(/(20\d{2})\s*년\s*귀\s*속/); return v?+v:null; })();
+  F.total  = G(/종\s*합\s*소\s*득\s*금\s*액\s*19\s*([\d,]+)/);
+  F.ded    = G(/소\s*득\s*공\s*제\s*20\s*([\d,]+)/);
+  F.base   = G(/과\s*세\s*표\s*준\s*\(\s*19[^)]*\)\s*21\s*([\d,]+)/);
+  F.calc   = G(/산\s*출\s*세\s*액\s*23\s*([\d,]+)/);
+  F.credit = G(/세\s*액\s*공\s*제\s*25\s*([\d,]+)/);
+  F.decided= G(/종\s*합\s*과\s*세\s*\(\s*23[^)]*\)\s*26\s*([\d,]+)/);
+  if(F.decided==null) F.decided = G(/합\s*계\s*\(\s*26[^)]*\)\s*28\s*([\d,]+)/);
+  F.prepaid= G(/기\s*납\s*부\s*세\s*액\s*32\s*([\d,]+)/);
+  F.due    = G(/총\s*세\s*액\s*\(\s*31[^)]*\)\s*33\s*([\-\d,]+)/);
+  F.ftc    = G(/외\s*국\s*납\s*부\s*세\s*액\s*공\s*제\s*201\s*([\d,]+)/);
+  F.divcr  = G(/배\s*당\s*세\s*액\s*공\s*제\s*202\s*([\d,]+)/);
+  F.std    = G(/표\s*준\s*세\s*액\s*공\s*제\s*284\s*([\d,]+)/);
+  F.earn   = G(/근\s*로\s*소\s*득\s*세\s*액\s*공\s*제\s*203\s*([\d,]+)/);
+  F.child  = G(/자\s*녀\s*세\s*액\s*공\s*제[^0-9]{0,30}273\s*([\d,]+)/);
+  F.efile  = G(/전\s*자\s*신\s*고[^0-9]{0,20}244\s*[\d,]*\s*([\d,]+)/);
+  F.intc   = G(/외의\s*이자소득\s*([\d,]+)/);
+  if(F.intc==null) F.intc = G(/이자소득\s*합계[^0-9]{0,20}([\d,]+)/);
+  F.divg   = G(/대상배당소득\s*([\d,]+)/);
+  F.divo   = G(/외의\s*배당소득\s*([\d,]+)/);
+  F.nbl25  = G(/①\s*비영업대금이익\s*\(?\s*25\s*%?\s*\)?\s*([\d,]+)/);
+  F.nbl14  = G(/⒜\s*비영업대금이익\s*\(?\s*14\s*%?\s*\)?\s*([\d,]+)/);
+  F.intn   = G(/②\s*원천징수되지\s*않은\s*이자소득\s*([\d,]+)/);
+  F.nbl    = G(/③\s*원천징수되지\s*않은\s*비영업대금이익\s*([\d,]+)/);
+  F.divn   = G(/⑦\s*원천징수되지\s*않은\s*배당소득\s*([\d,]+)/);
+  F.fin    = G(/금\s*융\s*소\s*득\s*금\s*액\s*\([^)]{0,12}\)\s*([\d,]+)/);
+  /* 대체식은 B0 등록부에서 전 구성요소를 합산하여 처리한다 */
+
+  /* ⑰ 계산서 — 두 가지 배치를 모두 처리한다.
+     A 라벨 뒤에 값이 오는 형태 (좌표 재조립 · pdfplumber)
+     B 라벨 뭉치 뒤에 값 뭉치가 오는 형태 (브라우저 전체복사)
+     어느 쪽이든 항등식 검문을 통과해야 채택한다. */
+  (function(){
+    function P(re){ for(var q=0;q<SRC.length;q++){ var m=SRC[q].match(re); if(m) return num(m[1]); } return null; }
+    function chk(M){
+      if(!M) return false;
+      if(M.f19==null||M.f20==null||M.f21==null) return false;
+      if(M.f19+M.f20!==M.f21) return false;                       /* ⑲+⑳=㉑ */
+      if(M.f10!=null && F.f5!=null && F.f9!=null && M.f10!==F.f5+F.f9) return false;  /* ⑩=⑤+⑨ */
+      if(M.f22!=null&&M.f24!=null&&M.f29!=null&&M.f30!=null && M.f22+M.f24+M.f29!==M.f30) return false; /* ㉒+㉔+㉙=㉚ */
+      if(M.f12!=null&&M.f10!=null && M.f10-20000000!==M.f12) return false;            /* ⑩−2천만=⑫ */
+      return true;
+    }
+    /* ── A : 라벨 인접형 ── */
+    var A = {
+      f10: P(/⑩\s*금\s*융\s*소\s*득\s*금\s*액\s*\(\s*⑤[^)]{0,6}\)\s*([\d,]+)/),
+      f12: P(/⑫\s*기\s*준\s*초\s*과\s*금\s*액\s*\([^)]{0,10}\)\s*([\d,]+)/),
+      f13: P(/⑬\s*배\s*당\s*가\s*산\s*액\s*([\d,]+)/),
+      f15: P(/⑮\s*기\s*준\s*금\s*액\s*외[^0-9]{0,20}([\d,]+)/),
+      f17: P(/⑰\s*과\s*세\s*표\s*준\s*\([^)]{0,10}\)\s*([\d,]+)/),
+      f19: P(/⑲\s*산\s*출\s*세\s*액\s*([\d,]+)/),
+      f20: P(/⑳\s*\[?\s*⑪\s*×?\s*\(?\s*14\s*\/\s*100\s*\)?\s*\]?\s*([\d,]+)/),
+      f21: P(/㉑\s*비\s*교\s*산\s*출\s*세\s*액[^0-9]{0,14}([\d,]+)/),
+      f22: P(/㉒\s*비\s*영\s*업\s*대\s*금\s*이\s*익\s*\[[^\d\]]{0,40}(?:25\s*\/\s*100)\s*\+?\s*([\d,]+)/),
+      f23: P(/㉓\s*비\s*영\s*업\s*대\s*금\s*이\s*익\s*외\s*의\s*금\s*융\s*소\s*득\s*\[[^\d\]]{0,12}([\d,]+)/),
+      f24: P(/㉔\s*\[?\s*㉓\s*×?\s*\(?\s*14\s*\/\s*100\s*\)?\s*\]?\s*([\d,]+)/),
+      f27: P(/㉗\s*과\s*세\s*표\s*준\s*\([^)]{0,12}\)\s*([\d,]+)/),
+      f29: P(/㉙\s*산\s*출\s*세\s*액\s*([\d,]+)/),
+      f30: P(/㉚\s*비\s*교\s*산\s*출\s*세\s*액[^0-9]{0,16}([\d,]+)/),
+      f31: P(/㉛\s*종\s*합\s*소\s*득\s*산\s*출\s*세\s*액[^0-9]{0,18}([\d,]+)/)
+    };
+    /* ── B : 값 뭉치형 ── */
+    var B = null;
+    (function(){
+      var src=SRC[0], p=src.indexOf('작은 금액');
+      if(p<0) p=src.indexOf('작은금액');
+      if(p<0) return;
+      var toks=src.slice(p,p+1200).match(/[\d,]+\.\d\d|[\d,]{1,20}/g)||[];
+      var v=toks.map(function(x){ return x.indexOf('.')>=0?parseFloat(x.replace(/,/g,'')):num(x); })
+               .filter(function(x){ return x!==null&&!isNaN(x); });
+      var k=v.indexOf(20000000);
+      if(k<1||v.length<k+22) return;
+      var b=v.slice(k-1);
+      B={ f10:b[0],f12:b[2],f13:b[3],f15:b[5],f17:b[7],f19:b[9],f20:b[10],f21:b[11],
+          f22:b[12],f23:b[13],f24:b[14],f27:b[17],f29:b[19],f30:b[20],f31:b[21] };
+    })();
+    var okA=chk(A), okB=chk(B);
+    if(okA) F.stmt=A;
+    else if(okB) F.stmt=B;
+    else {
+      var cand = A.f10!=null?A:B;
+      if(cand){ var n=0; for(var kk in cand) if(cand[kk]!=null) n++;
+                if(n>=8) F.stmtPartial=cand; }
+    }
+  })();
+
+  var miss=[];
+  ['year','total','ded','calc','credit','decided','prepaid'].forEach(function(k){ if(F[k]==null) miss.push(k); });
+  if(miss.length){
+    var han=(t.match(/[가-힣]/g)||[]).length, dig=(t.match(/\d/g)||[]).length;
+    var head=t.replace(/\n/g,' ').slice(0,120);
+    var dx='';
+    if(han<20) dx='한글이 '+han+'자만 추출됨 → cMap 미탑재 또는 스캔 이미지 PDF. vendor/cmaps 경로를 확인할 것.';
+    else if(dig<50) dx='숫자가 '+dig+'개만 추출됨 → 표지만 읽혔거나 페이지가 잘림.';
+    else dx='서식이 달라 항목 위치를 못 찾음.';
+    if(window._DIAG) dx+=' [항목 '+_DIAG.items+'개 · 폭없음 '+_DIAG.noWidth+'개 · 첫항목 "'+_DIAG.sample.map(function(o){return o.s;}).join('')+'" w='+_DIAG.sample.map(function(o){return Math.round(o.w*10)/10;}).join(',')+']';
+    pmsg('필수 항목 인식 실패: '+miss.join(', ')+'<br>진단 — '+dx+'<br><span style="font-family:Consolas;font-size:10px;color:#5a6572">판독 원문 앞부분: '+head.replace(/</g,'&lt;')+'</span>','bad');
+    return;
+  }
+
+  /* Gross-up 가산율 역산 : 배당세액공제와 일치하는 율을 채택 */
+  var gur = (F.year>=2024)?0.10:0.11;
+  if(F.divg && F.divcr){
+    [0.10,0.11].forEach(function(r){ if(Math.floor(F.divg*r)===F.divcr) gur=r; });
+  }
+  var GU = F.divg? Math.floor(F.divg*gur) : 0;
+
+  /* 금융외 종합소득 = 종합소득금액 − 이자 − 배당소득금액(Gross-up 포함) */
+  var divTotal = (F.divg||0)+(F.divo||0)+(F.divn||0)+GU;
+  var oth = F.total - (F.intc||0) - (F.intn||0) - (F.nbl||0) - (F.nbl25||0) - (F.nbl14||0) - divTotal;
+
+  /* 그 밖의 세액공제 = 세액공제 합계 − 외국납부 − 배당.
+     외국납부 항목이 아예 없는 신고서(F.ftc=null)도 0 으로 보고 차감한다. */
+  var etc = (F.credit!=null) ? (F.credit - (F.ftc||0) - (F.divcr||0)) : (F.std||0);
+  if(etc<0) etc=0;
+
+  var set={ year:String(F.year), gur:String(+(gur*100).toFixed(2)),
+    intc:F.intc||0, nbl25:F.nbl25||0, nbl14:F.nbl14||0, intn:F.intn||0, nbl:F.nbl||0, divn:F.divn||0,
+    divg:F.divg||0, divo:F.divo||0, oth:oth, ded:F.ded||0,
+    ftc:F.ftc||0, etc:etc, pi:0, pd:0, po:F.prepaid||0,
+    roc:0, divoadj:0, rocw:0, ftcadd:0, etcadd:0, preadd:0 };
+  for(var k in set){ var el=document.getElementById(k); if(el) el.value=set[k]; }
+  GURLOCK=true;
+  if(!document.querySelector('#year option[value="'+F.year+'"]') &&
+     ![].slice.call(document.getElementById('year').options).some(function(o){return o.text==String(F.year);})){
+    var o=document.createElement('option'); o.text=String(F.year); document.getElementById('year').add(o);
+  }
+  document.getElementById('year').value=String(F.year);
+
+  /* 파싱된 신고서 값을 그 연도의 검증 기준으로 등록 */
+  var B0 = { label: F.year+'귀속 신고서 (PDF 판독)',
+    '⑩ 금융소득금액': (function(){
+        var alt=(F.intc||0)+(F.intn||0)+(F.nbl||0)+(F.nbl25||0)+(F.nbl14||0)+(F.divg||0)+(F.divo||0)+(F.divn||0);
+        var m=(F.stmt&&F.stmt.f10!=null)?F.stmt.f10:null;
+        if(m!=null && m>0) return m;
+        if(F.fin!=null && F.fin>0 && F.fin===alt) return F.fin;
+        return alt; })(),
+    '❹19 종합소득금액': F.total, '❹21 과세표준': F.base, '❹23 산출세액': F.calc,
+    '㊵ 배당세액공제': F.divcr!=null?F.divcr:0, '세액공제 합계': F.credit,
+    '❹26 결정세액': F.decided, '❹32 기납부세액': F.prepaid,
+    '❹33 납부할 총세액': F.due!=null?F.due:(F.decided-F.prepaid) };
+  var SM = F.stmt || F.stmtPartial;
+  var f5 = G(/⑤\s*이\s*자\s*소\s*득\s*합\s*계\s*\([^)]{0,20}\)\s*([\d,]+)/);
+  var f9 = G(/⑨\s*배\s*당\s*소\s*득\s*합\s*계\s*\([^)]{0,16}\)\s*([\d,]+)/);
+  if(f5!=null) B0['⑤ 이자소득 합계']=f5;
+  if(f9!=null) B0['⑨ 배당소득 합계']=f9;
+  if(SM){ var M=SM;
+    B0['⑫ 기준초과금액']=M.f12; B0['⑬ 배당가산액']=M.f13; B0['⑮ 기준금액 외 종합소득']=M.f15;
+    B0['⑰ 과세표준']=M.f17; B0['⑲ 산출세액']=M.f19; B0['㉑ 비교산출세액(종합)']=M.f21;
+    if(M.f22!=null) B0['㉒ 비영업대금이익']=M.f22;
+    if(M.f23!=null) B0['㉓ 비영업대금 외 금융소득']=M.f23;
+    B0['㉔ 금융소득×14%']=M.f24; B0['㉗ 금융외 과세표준']=M.f27; B0['㉙ 금융외 산출세액']=M.f29;
+    B0['㉚ 비교산출세액(분리)']=M.f30; B0['㉛ 종합소득산출세액']=M.f31;
+    for(var kz in B0) if(B0[kz]===null||B0[kz]===undefined) delete B0[kz];
+  }
+  BASE[F.year]=B0;
+  onYear(); GURLOCK=false;
+  var got=[]; for(var kk in F) if(F[kk]!=null) got.push(kk);
+  pmsg(F.year+'귀속 판독 완료 — 항목 '+got.length+'개 · Gross-up '+(gur*100)+'% · 검증기준 '+(Object.keys(BASE[F.year]).length-1)+'개'+(F.stmt?' (⑰ 계산서 포함)':(F.stmtPartial?' (⑰ 부분 인식)':' (⑰ 미인식)')),'ok');
+}
+var BUILD='2026-08-23e';
+var GURLOCK=false;
+function pmsg(m,c){ var e=document.getElementById('pmsg');
+  e.innerHTML='<span class="badge '+(c==='ok'?'b-ok':(c==='bad'?'b-bad':'b-mut'))+'">'+m+'</span>'+'<div style="font-size:10px;color:#8a97a2;margin-top:3px">build '+BUILD+'</div>'; }
+
+/* ═══ PDF 로더 ═══ */
+function pdfReady(){ return typeof pdfjsLib!=='undefined'; }
+async function readPDF(file){
+  if(!pdfReady()){ pmsg('vendor/pdf.min.js 를 불러오지 못했다. 텍스트 붙여넣기를 사용할 것.','bad'); return; }
+  pmsg('판독 중…','mut');
+  try{
+    var buf=await file.arrayBuffer();
+    var doc=await pdfjsLib.getDocument({
+      data:buf,
+      cMapUrl:'vendor/cmaps/', cMapPacked:true,
+      standardFontDataUrl:'vendor/standard_fonts/',
+      useSystemFonts:false
+    }).promise;
+    var out='';
+    for(var p=1;p<=doc.numPages;p++){
+      var page=await doc.getPage(p), tc=await page.getTextContent();
+      /* pdf.js 는 글자 단위로 항목을 쪼개 반환하는 경우가 있다.
+         항목 사이에 무조건 공백을 넣으면 442,239,444 가 4 4 2 , … 로 흩어진다.
+         x 좌표 간격이 임계를 넘을 때만 공백을 넣어 원래 낱말을 복원한다. */
+      var it2=[], W0=0;
+      tc.items.forEach(function(it){ if(it.str) it2.push({s:it.str,x:it.transform[4],y:it.transform[5],w:it.width||0}); });
+      it2.forEach(function(o){ if(!o.w) W0++; });
+      /* 폭이 비어 있으면 같은 줄 다음 항목의 x 로 진행폭을 추정한다 */
+      for(var q=0;q<it2.length;q++){
+        if(!it2[q].w){
+          var nx=(q+1<it2.length && Math.abs(it2[q+1].y-it2[q].y)<=2.0) ? it2[q+1].x : null;
+          it2[q].w = (nx!==null && nx>it2[q].x) ? (nx-it2[q].x) : 0;
+        }
+      }
+      var line='', prevEnd=null, prevY=null, TH=1.2;
+      it2.forEach(function(o){
+        if(prevY!==null && Math.abs(o.y-prevY)>2.0){ line+='\n'; prevEnd=null; }
+        else if(prevEnd!==null && (o.x-prevEnd)>TH) line+=' ';
+        line+=o.s; prevEnd=o.x+o.w; prevY=o.y;
+      });
+      if(p===1) window._DIAG={items:it2.length, noWidth:W0, sample:it2.slice(0,8)};
+      out+=line+'\n';
+    }
+    document.getElementById('pastebox').value=out.slice(0,40000);
+    parseText(out);
+  }catch(e){ pmsg('PDF 판독 실패: '+e.message,'bad'); }
+}
+(function(){
+  var d=document.getElementById('drop'), inp=document.getElementById('pdff');
+  d.onclick=function(){ inp.click(); };
+  inp.onchange=function(){ if(this.files[0]) readPDF(this.files[0]); this.value=''; };
+  ['dragenter','dragover'].forEach(function(ev){ d.addEventListener(ev,function(e){e.preventDefault();d.style.borderColor='#1f5c94';}); });
+  ['dragleave','drop'].forEach(function(ev){ d.addEventListener(ev,function(e){e.preventDefault();d.style.borderColor='';}); });
+  d.addEventListener('drop',function(e){ var f=e.dataTransfer.files[0]; if(f) readPDF(f); });
+})();
+
+function stampPrint(){
+  document.getElementById('phdr_y').textContent = document.getElementById('year').value + '귀속';
+  document.getElementById('phdr_d').textContent = new Date().toISOString().slice(0,10);
+  document.getElementById('phdr_b').textContent = 'build ' + BUILD;
+}
+window.addEventListener('beforeprint', stampPrint);
+document.getElementById('adjpanel').style.display='';
+presetDemo(); onYear();
+if(pdfReady()){ pmsg("신고서 PDF 를 끌어놓으면 해당 연도 값과 검증 기준이 자동 등록된다.","mut"); }
+else { document.getElementById('drop').innerHTML='PDF 판독 꺼짐 — vendor/pdf.min.js 를 불러오지 못했다<br><span style="font-size:10px">아래 텍스트 붙여넣기를 사용할 것</span>';
+       document.getElementById('drop').style.background='#fdf1ef';
+       document.getElementById('drop').style.borderColor='#b23a2e';
+       pmsg('vendor 폴더가 함께 배포되었는지 확인할 것.','bad'); }
+</script>
+</div></body></html>
