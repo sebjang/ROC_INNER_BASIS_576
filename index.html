@@ -41,6 +41,11 @@ button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
 .note.w{background:var(--warnbg);border-color:var(--warn)}
 .vt td{font-size:11px}
 @media print{.bar{display:none}}
+.contact{ color:#5a6572; }
+.contact a{ color:#1f5c94; text-decoration:none; border-bottom:1px solid #c3d4e6; }
+.contact a:hover{ border-bottom-color:#1f5c94; }
+p.contact{ margin-top:-4px; font-size:11px; }
+@media print{ .contact a{ color:#000!important; border-bottom:none!important; } }
 
 @media print{
   #phdr{ display:block!important; }
@@ -101,10 +106,11 @@ button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
     <span id=phdr_y></span> · 출력 <span id=phdr_d></span> · <span id=phdr_b></span>
   </div></div>
 <h1>종합소득세 계산기 — 금융소득 종합과세</h1>
-<p class=s><b style="color:#1f5c94">BUILD 2026-08-23e</b> · 소득세법 §62 비교과세 · 신고서 ⑰ 산출세액계산서(금융소득자용) 전개 순서 · 원 미만 절사</p>
+<p class=s><b style="color:#1f5c94">BUILD 2026-08-26a</b> · 소득세법 §62 비교과세 · 신고서 ⑰ 산출세액계산서(금융소득자용) 전개 순서 · 원 미만 절사</p>
+<p class="s contact">문의 · 오류 신고 — <a href="mailto:sebjang@gmail.com?subject=%5B%EC%A2%85%EC%86%8C%EC%84%B8%20%EA%B3%84%EC%82%B0%EA%B8%B0%5D%20%EB%AC%B8%EC%9D%98&amp;body=BUILD%202026-08-26a%0A%EA%B7%80%EC%86%8D%EC%97%B0%EB%8F%84%3A%20%0A%EC%A6%9D%EC%83%81%3A%20">sebjang@gmail.com</a></p>
 
 <div class=bar>
-  <button class=pri onclick="presetDemo()">예시값 불러오기</button>
+  <button class=pri onclick="presetDemo(true)">예시값 불러오기 → 신고서</button>
   <button onclick="verify()">검증 실행</button>
   <button onclick="ex()">상태 저장 (.json)</button>
   <button onclick="document.getElementById('imp').click()">상태 복원 (.json)</button>
@@ -181,12 +187,13 @@ button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
   <table id=det></table>
   <h2>검증</h2>
   <table id=ver class=vt></table>
-  <div class=note w><b>입력값은 브라우저 안에서만 처리되며 서버로 전송되지 않는다.</b>
-  본 계산기는 금융소득 종합과세와 §62 비교과세를 재현한다.
-  외국납부세액공제 한도(§57), 감면, 가산세, 농어촌특별세, 지방소득세는 산출하지 않는다.
-  지방소득세는 결정세액의 10%로 위택스에 별도 신고한다. 최종 확정과 신고·경정 결정은 세무대리인·과세관청의 권한이다.
-  본 도구는 참고용이며 산출 결과에 대하여 어떠한 책임도 지지 아니한다.<br>
-  PDF 판독에 Mozilla pdf.js (Apache-2.0) 를 사용한다.</div>
+  <div class=note w><b>입력값은 이용자의 브라우저 내에서만 처리되며 서버로 전송되지 않습니다.</b>
+  본 계산기는 금융소득 종합과세 및 「소득세법」 제62조의 비교과세 계산구조를 재현합니다.
+  ROC 취득가액 이내분은 별도의 증빙·사실판단을 거쳐 확정된 금액을 사용자가 직접 입력하는 구조입니다.
+  외국납부세액공제 한도, 감면, 가산세, 농어촌특별세 및 개인지방소득세는 계산하지 않습니다.
+  최종 신고·경정 및 법률상 판단은 납세자·세무대리인·과세관청의 권한입니다.<br>
+  PDF 판독에 Mozilla pdf.js (Apache-2.0) 를 사용합니다.<br>
+  <span class=contact>문의 · 오류 신고 — <a href="mailto:sebjang@gmail.com?subject=%5B%EC%A2%85%EC%86%8C%EC%84%B8%20%EA%B3%84%EC%82%B0%EA%B8%B0%5D%20%EB%AC%B8%EC%9D%98">sebjang@gmail.com</a> · (주)인흥 장세봉</span></div>
 </div>
 </div>
 
@@ -345,7 +352,7 @@ function verify(){
   document.getElementById('vb').innerHTML='<span class="badge '+(ok===n?'b-ok':'b-bad')+'">'+y+'귀속 검증 '+ok+' / '+n+'</span>';
 }
 
-function presetDemo(){
+function presetDemo(chain){
   /* 공개 예시값 — 실제 신고자료가 아니다. 세율구간 확인용 가상 수치. */
   var s={year:'2024',gur:'10',intc:'12000000',nbl25:'0',nbl14:'0',intn:'0',nbl:'0',divn:'0',
     divg:'1000000',divo:'30000000',oth:'40000000',ded:'3000000',
@@ -353,6 +360,26 @@ function presetDemo(){
     roc:'0',divoadj:'0',rocw:'0',ftcadd:'0',etcadd:'0',preadd:'0'};
   for(var k in s) document.getElementById(k).value=s[k];
   GURLOCK=true; onYear(); GURLOCK=false; verify();
+  if(chain) toReport();
+}
+
+/* 예시값 → 신고서 불러오기 연결.
+   예시값을 먼저 채워 화면을 살린 뒤 신고서 상자로 넘긴다.
+   PDF 를 넣으면 parseText 의 set 이 전 입력항목을 덮어쓰므로 예시값은 남지 않는다.
+   파일 선택을 취소하면 예시값 상태가 그대로 유지된다. */
+var AUTOPICK = true;   /* false 로 두면 스크롤·강조만 하고 선택창은 열지 않는다 */
+function toReport(){
+  var d=document.getElementById('drop'), inp=document.getElementById('pdff');
+  if(!d) return;
+  d.scrollIntoView({behavior:'smooth',block:'center'});
+  var bc=d.style.borderColor, bg=d.style.background;
+  d.style.borderColor='#1f5c94'; d.style.background='#eaf2fb';
+  setTimeout(function(){ d.style.borderColor=bc; d.style.background=bg; },1400);
+  if(!pdfReady()){ pmsg('PDF 판독이 꺼져 있다. 아래 텍스트 붙여넣기를 사용할 것.','bad'); return; }
+  pmsg('예시값을 채웠다. 신고서 PDF 를 넣으면 실제 값으로 전부 교체된다.','mut');
+  /* setTimeout 으로 미루면 Safari 에서 사용자 제스처가 끊겨 선택창이 차단된다.
+     스크롤 애니메이션과 겹치더라도 동기 호출을 유지한다. */
+  if(AUTOPICK && inp) inp.click();
 }
 function ex(){ var s={}; ['year','gur','intc','nbl25','nbl14','intn','nbl','divn','divg','divo','oth','ded','ftc','etc','pi','pd','po','roc','divoadj','rocw','ftcadd','etcadd','preadd']
   .forEach(function(k){s[k]=document.getElementById(k).value;});
@@ -571,7 +598,7 @@ function parseText(raw){
   var got=[]; for(var kk in F) if(F[kk]!=null) got.push(kk);
   pmsg(F.year+'귀속 판독 완료 — 항목 '+got.length+'개 · Gross-up '+(gur*100)+'% · 검증기준 '+(Object.keys(BASE[F.year]).length-1)+'개'+(F.stmt?' (⑰ 계산서 포함)':(F.stmtPartial?' (⑰ 부분 인식)':' (⑰ 미인식)')),'ok');
 }
-var BUILD='2026-08-23e';
+var BUILD='2026-08-26a';
 var GURLOCK=false;
 function pmsg(m,c){ var e=document.getElementById('pmsg');
   e.innerHTML='<span class="badge '+(c==='ok'?'b-ok':(c==='bad'?'b-bad':'b-mut'))+'">'+m+'</span>'+'<div style="font-size:10px;color:#8a97a2;margin-top:3px">build '+BUILD+'</div>'; }
