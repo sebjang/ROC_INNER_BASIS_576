@@ -106,7 +106,7 @@ p.contact{ margin-top:-4px; font-size:11px; }
     <span id=phdr_y></span> · 출력 <span id=phdr_d></span> · <span id=phdr_b></span>
   </div></div>
 <h1>종합소득세 계산기 — 금융소득 종합과세</h1>
-<p class=s><b style="color:#1f5c94">BUILD 2026-08-26a</b> · 소득세법 §62 비교과세 · 신고서 ⑰ 산출세액계산서(금융소득자용) 전개 순서 · 원 미만 절사</p>
+<p class=s><b style="color:#1f5c94">BUILD 2026-08-27b</b> · 소득세법 §62 비교과세 · 신고서 ⑰ 산출세액계산서(금융소득자용) 전개 순서 · 원 미만 절사 · 미리보기형/전자신고제출분 양식 판독</p>
 <p class="s contact">문의 · 오류 신고 — <a href="mailto:sebjang@gmail.com?subject=%5B%EC%A2%85%EC%86%8C%EC%84%B8%20%EA%B3%84%EC%82%B0%EA%B8%B0%5D%20%EB%AC%B8%EC%9D%98&amp;body=BUILD%202026-08-26a%0A%EA%B7%80%EC%86%8D%EC%97%B0%EB%8F%84%3A%20%0A%EC%A6%9D%EC%83%81%3A%20">sebjang@gmail.com</a></p>
 
 <div class=bar>
@@ -466,6 +466,93 @@ function parseText(raw){
   F.fin    = G(/금\s*융\s*소\s*득\s*금\s*액\s*\([^)]{0,12}\)\s*([\d,]+)/);
   /* 대체식은 B0 등록부에서 전 구성요소를 합산하여 처리한다 */
 
+  /* 【전자신고제출분】 보정 — 앵커 구간 방식.
+     항번(19·20·23…)이 라벨과 떨어져 찍히거나 페이지 끝으로 밀려나는 판본이 있다.
+     라벨만으로 전역 검색하면 같은 낱말이 다른 명세서에서도 걸리므로
+     ① 명세서 제목을 앵커로 삼아 구간을 자르고
+     ② 그 구간 안에서 라벨을 순서대로 훑으며
+     ③ 다음 라벨이 나오기 전까지의 첫 세자리 이상 숫자만 값으로 채택한다.
+     항번은 두 자리라 자연히 건너뛰고, 빈 행(세율·세액감면)은 null 로 남는다. */
+  (function(){
+    function SEC(a,b){
+      for(var i=0;i<SRC.length;i++){
+        var s=SRC[i], p=s.search(a);
+        if(p<0) continue;
+        if(!b) return s.slice(p);
+        var q=s.slice(p+1).search(b);
+        return q<0 ? s.slice(p) : s.slice(p, p+1+q);
+      }
+      return '';
+    }
+    /* 구간 안에서 라벨 순서대로 값을 뽑는다. seq = [[키, 라벨정규식], …] */
+    function SCAN(sec, seq){
+      if(!sec) return;
+      var pos=[], i;
+      var cur=0;
+      for(i=0;i<seq.length;i++){
+        var m=sec.slice(cur).match(seq[i][1]);
+        if(!m){ pos.push(-1); continue; }
+        var at=cur+m.index+m[0].length;
+        pos.push(at); cur=at;
+      }
+      for(i=0;i<seq.length;i++){
+        var key=seq[i][0];
+        if(!key || pos[i]<0 || F[key]!=null) continue;
+        var stop=sec.length;
+        for(var k=i+1;k<seq.length;k++){ if(pos[k]>=0){ stop=pos[k]; break; } }
+        var seg=sec.slice(pos[i], stop);
+        var v=seg.match(/(-?[\d,]{3,})/);
+        if(v) F[key]=num(v[1]);
+      }
+    }
+
+    /* ① 세액의 계산 (제3쪽) — 신고서 본표 */
+    SCAN(SEC(/세\s*액\s*의\s*계\s*산/, /신\s*고\s*인\s*은|소\s*득\s*세\s*법\s*」?\s*제\s*70\s*조/), [
+      ['total',   /종\s*합\s*소\s*득\s*금\s*액/],
+      ['ded',     /소\s*득\s*공\s*제/],
+      ['base',    /과\s*세\s*표\s*준/],
+      [null,      /세\s*율/],
+      ['calc',    /산\s*출\s*세\s*액/],
+      [null,      /세\s*액\s*감\s*면/],
+      ['credit',  /세\s*액\s*공\s*제/],
+      ['decided', /종\s*합\s*과\s*세/],
+      [null,      /분\s*리\s*과\s*세/],
+      [null,      /합\s*계/],
+      [null,      /가\s*산\s*세/],
+      [null,      /추\s*가\s*납\s*부\s*세\s*액/],
+      [null,      /합\s*계/],
+      ['prepaid', /기\s*납\s*부\s*세\s*액/],
+      ['due',     /납\s*부\s*\(?\s*환\s*급\s*\)?\s*할\s*총\s*세\s*액/]
+    ]);
+
+    /* ② 세액공제명세서 (제19쪽) */
+    SCAN(SEC(/세\s*액\s*공\s*제\s*명\s*세\s*서/, /준\s*비\s*금\s*명\s*세\s*서/), [
+      ['divcr', /배\s*당\s*세\s*액\s*공\s*제/],
+      [null,    /기\s*장\s*세\s*액\s*공\s*제/],
+      [null,    /전\s*자\s*계\s*산\s*서/],
+      ['ftc',   /외\s*국\s*납\s*부\s*세\s*액\s*공\s*제/]
+    ]);
+    if(F.std==null){
+      var sec19=SEC(/세\s*액\s*공\s*제\s*명\s*세\s*서/, /준\s*비\s*금\s*명\s*세\s*서/);
+      var ms=sec19.match(/표\s*준\s*세\s*액\s*공\s*제\s*(?:284\s*)?([\d,]{3,})/);
+      if(ms) F.std=num(ms[1]);
+    }
+
+    /* ③ 기납부세액명세서 — 이자·배당 원천징수 분리 */
+    SCAN(SEC(/기\s*납\s*부\s*세\s*액\s*명\s*세\s*서/, /종\s*합\s*소\s*득\s*산\s*출\s*세\s*액\s*계\s*산\s*서/), [
+      ['pi', /이\s*자\s*소\s*득\s*⑤/],
+      ['pd', /배\s*당\s*소\s*득\s*⑥/]
+    ]);
+
+    /* ④ 귀속연도 — 항번이 밀려나 "( 년 귀속)" 이 비는 판본 대비 */
+    if(F.year==null){
+      var y=GS(/과\s*세\s*기\s*간\s*종\s*료\s*일\s*(20\d{2})\s*[.\-]/) ||
+            GS(/과\s*세\s*기\s*간\s*개\s*시\s*일\s*(20\d{2})\s*[.\-]/) ||
+            GS(/(20\d{2})\s*\.\s*12\s*\.\s*31/);
+      if(y) F.year=+y;
+    }
+  })();
+
   /* ⑰ 계산서 — 두 가지 배치를 모두 처리한다.
      A 라벨 뒤에 값이 오는 형태 (좌표 재조립 · pdfplumber)
      B 라벨 뭉치 뒤에 값 뭉치가 오는 형태 (브라우저 전체복사)
@@ -514,11 +601,48 @@ function parseText(raw){
       B={ f10:b[0],f12:b[2],f13:b[3],f15:b[5],f17:b[7],f19:b[9],f20:b[10],f21:b[11],
           f22:b[12],f23:b[13],f24:b[14],f27:b[17],f29:b[19],f30:b[20],f31:b[21] };
     })();
-    var okA=chk(A), okB=chk(B);
-    if(okA) F.stmt=A;
-    else if(okB) F.stmt=B;
+    /* ── C : 【전자신고제출분】 ──
+       홈택스 미리보기는 항번을 원문자(⑰⑲⑳)로 찍지만
+       전자신고제출분은 네모칸 안의 보통숫자(17 19 20)로 찍고,
+       항번이 라벨 뒤가 아니라 라벨 앞에 온다.  → A 가 전부 실패한다.
+       또 좌우 2단 표라서 왼쪽 값 뒤에 오른쪽 항번이 바로 붙는다.
+       ( "69,440,719 32 [(②＋⑦)…" )  자간압축본(tight)은 이 둘을
+       69,440,71932 로 붙여버리므로 C 는 flat 만 사용한다. */
+    var C = null;
+    (function(){
+      var src = SRC[0];
+      var p = src.search(/금\s*융\s*소\s*득\s*명\s*세/);
+      if(p<0) return;
+      var s = src.slice(p, p+3000);
+      function Q(re){ var m=s.match(re); return m?num(m[1]):null; }
+      C = {
+        f10: Q(/⑩\s*금\s*융\s*소\s*득\s*금\s*액\s*\([^)]{0,12}\)\s*([\d,]{3,})/),
+        f12: Q(/⑫\s*기\s*준\s*초\s*과\s*금\s*액\s*\([^)]{0,12}\)\s*([\d,]{3,})/),
+        f13: Q(/⑬\s*배\s*당\s*가\s*산\s*액\s*([\d,]{3,})/),
+        f15: Q(/⑮\s*기\s*준\s*금\s*액\s*외\s*의\s*종\s*합\s*소\s*득\s*금\s*액\s*\([^)]{0,16}\)\s*([\d,]{3,})/),
+        f17: Q(/(?:⑰|17)\s*과\s*세\s*표\s*준\s*\([^)]{0,16}\)\s*([\d,]{3,})/),
+        f19: Q(/(?:⑲|19)\s*산\s*출\s*세\s*액\s*([\d,]{3,})/),
+        f20: Q(/(?:⑳|20)\s*\[\s*⑪[^\]]{0,26}\]\s*([\d,]{3,})/),
+        f21: Q(/(?:㉑|21)\s*비\s*교\s*산\s*출\s*세\s*액\s*계\s*\([^)]{0,18}\)\s*([\d,]{3,})/),
+        f22: Q(/(?:㉒|22)\s*비\s*영\s*업\s*대\s*금\s*이\s*익\s*\[[^\]]{0,46}\]\s*([\d,]{3,})/),
+        f23: Q(/(?:㉓|23)\s*비\s*영\s*업\s*대\s*금\s*이\s*익\s*외\s*의\s*금\s*융\s*소\s*득\s*\[[^\]]{0,26}\]\s*([\d,]{3,})/),
+        f24: Q(/(?:㉔|24)\s*\[\s*(?:㉓|23)?[^\]]{0,26}\]\s*([\d,]{3,})/),
+        f27: Q(/(?:㉗|27)\s*과\s*세\s*표\s*준\s*\([^)]{0,16}\)\s*([\d,]{3,})/),
+        f29: Q(/(?:㉙|29)\s*산\s*출\s*세\s*액\s*([\d,]{3,})/),
+        f30: Q(/(?:㉚|30)\s*비\s*교\s*산\s*출\s*세\s*액\s*계\s*\([^)]{0,22}\)\s*([\d,]{3,})/),
+        f31: Q(/(?:㉛|31)\s*종\s*합\s*소\s*득\s*산\s*출\s*세\s*액\s*\([^)]{0,28}\)\s*([\d,]{3,})/)
+      };
+      /* 빈칸은 0 이다. 신고서에서 공란은 값 없음이 아니라 영(零)을 뜻한다. */
+      if(C.f13==null) C.f13=0;
+      if(C.f22==null) C.f22=0;
+    })();
+
+    var okA=chk(A), okB=chk(B), okC=chk(C);
+    if(okA){ F.stmt=A; F.form='미리보기형'; }
+    else if(okC){ F.stmt=C; F.form='전자신고제출분형'; }
+    else if(okB){ F.stmt=B; F.form='값뭉치형'; }
     else {
-      var cand = A.f10!=null?A:B;
+      var cand = A.f10!=null?A:(C&&C.f10!=null?C:B);
       if(cand){ var n=0; for(var kk in cand) if(cand[kk]!=null) n++;
                 if(n>=8) F.stmtPartial=cand; }
     }
@@ -557,7 +681,7 @@ function parseText(raw){
   var set={ year:String(F.year), gur:String(+(gur*100).toFixed(2)),
     intc:F.intc||0, nbl25:F.nbl25||0, nbl14:F.nbl14||0, intn:F.intn||0, nbl:F.nbl||0, divn:F.divn||0,
     divg:F.divg||0, divo:F.divo||0, oth:oth, ded:F.ded||0,
-    ftc:F.ftc||0, etc:etc, pi:0, pd:0, po:F.prepaid||0,
+    ftc:F.ftc||0, etc:etc, pi:F.pi||0, pd:F.pd||0, po:(F.prepaid||0)-(F.pi||0)-(F.pd||0),
     roc:0, divoadj:0, rocw:0, ftcadd:0, etcadd:0, preadd:0 };
   for(var k in set){ var el=document.getElementById(k); if(el) el.value=set[k]; }
   GURLOCK=true;
@@ -595,10 +719,10 @@ function parseText(raw){
   }
   BASE[F.year]=B0;
   onYear(); GURLOCK=false;
-  var got=[]; for(var kk in F) if(F[kk]!=null) got.push(kk);
-  pmsg(F.year+'귀속 판독 완료 — 항목 '+got.length+'개 · Gross-up '+(gur*100)+'% · 검증기준 '+(Object.keys(BASE[F.year]).length-1)+'개'+(F.stmt?' (⑰ 계산서 포함)':(F.stmtPartial?' (⑰ 부분 인식)':' (⑰ 미인식)')),'ok');
+  var got=[]; for(var kk in F) if(F[kk]!=null && kk!=='form') got.push(kk);
+  pmsg(F.year+'귀속 판독 완료 — 항목 '+got.length+'개 · Gross-up '+(gur*100)+'% · 검증기준 '+(Object.keys(BASE[F.year]).length-1)+'개'+(F.stmt?' (⑰ 계산서 포함 · '+(F.form||'?')+')':(F.stmtPartial?' (⑰ 부분 인식)':' (⑰ 미인식)')),'ok');
 }
-var BUILD='2026-08-26a';
+var BUILD='2026-08-27b';
 var GURLOCK=false;
 function pmsg(m,c){ var e=document.getElementById('pmsg');
   e.innerHTML='<span class="badge '+(c==='ok'?'b-ok':(c==='bad'?'b-bad':'b-mut'))+'">'+m+'</span>'+'<div style="font-size:10px;color:#8a97a2;margin-top:3px">build '+BUILD+'</div>'; }
