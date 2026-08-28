@@ -1,6 +1,6 @@
 <!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
-<title>종합소득세 계산기 — 금융소득 종합과세 · §62 비교과세</title>
+<title>ROC 환급 종합소득세 계산기 — 예규-576 · §62 비교과세</title>
 <style>
 :root{--ink:#16202b;--ink2:#5a6572;--ink3:#8a97a2;--line:#d7e2ea;--line2:#adc0ce;--line3:#7d93a5;
 --band:#f4f8fb;--acc:#1f5c94;--accbg:#e4eef7;--ok:#1a7a3c;--okbg:#e8f5e9;--bad:#b23a2e;--badbg:#fdf1ef;
@@ -105,9 +105,10 @@ p.contact{ margin-top:-4px; font-size:11px; }
   <div style="font-size:8.5pt;text-align:right;border-bottom:0.5pt solid #000;padding-bottom:2pt;margin-bottom:4pt">
     <span id=phdr_y></span> · 출력 <span id=phdr_d></span> · <span id=phdr_b></span>
   </div></div>
-<h1>종합소득세 계산기 — 금융소득 종합과세</h1>
-<p class=s><b style="color:#1f5c94">BUILD 2026-08-27b</b> · 소득세법 §62 비교과세 · 신고서 ⑰ 산출세액계산서(금융소득자용) 전개 순서 · 원 미만 절사 · 미리보기형/전자신고제출분 양식 판독</p>
-<p class="s contact">문의 · 오류 신고 — <a href="mailto:sebjang@gmail.com?subject=%5B%EC%A2%85%EC%86%8C%EC%84%B8%20%EA%B3%84%EC%82%B0%EA%B8%B0%5D%20%EB%AC%B8%EC%9D%98&amp;body=BUILD%202026-08-26a%0A%EA%B7%80%EC%86%8D%EC%97%B0%EB%8F%84%3A%20%0A%EC%A6%9D%EC%83%81%3A%20">sebjang@gmail.com</a></p>
+<h1>ROC 환급 종합소득세 계산기<br><span style="font-size:15px;font-weight:600;color:var(--ink2)">재경부 예규-576 시행 이후 금융소득 종합과세 / 분리과세 비교과세 계산 SW</span></h1>
+<p class=s style="margin:-2px 0 8px;padding:8px 10px;border-left:3px solid #1f5c94;background:#f4f8fc;line-height:1.65"><b style="color:#1f5c94">금융세제과-576</b> — 외국 ETF의 자본금 환급에 따른 배당에 대한 배당소득 과세 여부<br>해당 ETF를 취득하기 위하여 사용한 금액을 <b>초과하는 부분에 한하여 의제배당으로 과세</b></p>
+<p class=s><b style="color:#1f5c94">BUILD 2026-08-28a</b> · 소득세법 §62 비교과세 · 신고서 ⑰ 산출세액계산서(금융소득자용) 전개 순서 · 원 미만 절사 · 미리보기형/전자신고제출분 양식 판독</p>
+<p class="s contact">문의 · 오류 신고 — <a href="mailto:sebjang@gmail.com?subject=%5B%EC%A2%85%EC%86%8C%EC%84%B8%20%EA%B3%84%EC%82%B0%EA%B8%B0%5D%20%EB%AC%B8%EC%9D%98&amp;body=BUILD%202026-08-28a%0A%EA%B7%80%EC%86%8D%EC%97%B0%EB%8F%84%3A%20%0A%EC%A6%9D%EC%83%81%3A%20">sebjang@gmail.com</a> · (주)인흥 장세봉 · <a href="https://blog.naver.com/sbchang" target="_blank" rel="noopener noreferrer">블로그</a> · <a href="https://cafe.naver.com/l2t" target="_blank" rel="noopener noreferrer">카페</a> · <a href="https://open.kakao.com/o/p5WB8ali" target="_blank" rel="noopener noreferrer">오픈채팅</a></p>
 
 <div class=bar>
   <button class=pri onclick="presetDemo(true)">예시값 불러오기 → 신고서</button>
@@ -150,10 +151,19 @@ p.contact{ margin-top:-4px; font-size:11px; }
     <div class=f><label>배당소득 원천</label><input id=pd value="0" oninput="calc()"></div>
     <div class=f><label>그 밖의 원천</label><input id=po value="0" oninput="calc()"></div>
 
+    <div class="f hd"><label>재정경제부 예규 금융세제과-576 기반<br>ROC 취득가액 이내성 판정 <span style="font-weight:400;font-size:11px;color:#8a97a2">— 표기 전용</span></label><span></span></div>
+    <div style="font-size:11px;color:var(--ink2);line-height:1.7;padding:6px 0 10px">
+      <b>이내분</b> = MIN(누적ROC, 취득원가) … 원금반환, 과세 아님<br>
+      <b>의제배당</b> = MAX(0, 누적ROC − 취득원가) … 「소득세법」 §17① 의제배당<br>
+      <span style="color:#8a97a2">누적 ROC 와 취득원가는 발행사 확정자료(8937 · ICI Primary · 1099-DIV)와
+      증권사 원장에서 확인된 금액이어야 합니다. 본 계산기는 위 산식을 <b>표기만 하며</b> 판정하지 않습니다.
+      산정된 이내분은 아래 「① ROC 취득가이내분 감액」에 사용자가 직접 입력하며,
+      금액의 확정은 증빙과 사실판단의 영역입니다.</span>
+    </div>
     <div id=adjpanel style="display:none">
     <div class="f hd"><label>경정 시나리오 (경정열에만 반영)</label><span></span></div>
     <div class=f><label>① ROC 취득가이내분 <span style="color:#1a7a3c;font-weight:700">감액</span><br><span style="font-size:10px;color:#8a97a2">배당 — 그 외에서 차감 (과표 ↓)</span></label><input id=roc value="0" oninput="calc()"></div>
-    <div class=f><label>② 배당 — 그 외 <span style="color:#b23a2e;font-weight:700">증액</span><br><span style="font-size:10px;color:#8a97a2">양수 = 배당 증가 · 음수 = 감소 (과표 ↑↓)</span></label><input id=divoadj value="0" oninput="calc()"></div>
+    <div class=f><label>② 배당 — 그 외 <span style="color:#b23a2e;font-weight:700">증액</span><br><span style="font-size:10px;color:#8a97a2">취득가액 <b>초과분 의제배당</b> 과세분 반영 「소득세법」 §17①<br>양수 = 배당 증가 · 음수 = 감소 (과표 ↑↓)<br>정본 신고에 이미 배당으로 계상된 경우 이중계상에 주의</span></label><input id=divoadj value="0" oninput="calc()"></div>
     <div class=f><label>③ 배당 원천세 과다징수 <span style="color:#1a7a3c;font-weight:700">감액</span><br><span style="font-size:10px;color:#8a97a2">기납부에서 차감 · ① 의 짝항목</span></label><input id=rocw value="0" oninput="calc()"></div>
     <div class=f><label>④ 외국납부세액공제 <span style="color:#b23a2e;font-weight:700">증액</span><br><span style="font-size:10px;color:#8a97a2">§57 · 당초 누락분 (세액공제 ↑)</span></label><input id=ftcadd value="0" oninput="calc()"></div>
     <div class=f><label>⑤ 그 밖의 세액공제 <span style="color:#b23a2e;font-weight:700">증액</span></label><input id=etcadd value="0" oninput="calc()"></div>
@@ -193,7 +203,9 @@ p.contact{ margin-top:-4px; font-size:11px; }
   외국납부세액공제 한도, 감면, 가산세, 농어촌특별세 및 개인지방소득세는 계산하지 않습니다.
   최종 신고·경정 및 법률상 판단은 납세자·세무대리인·과세관청의 권한입니다.<br>
   PDF 판독에 Mozilla pdf.js (Apache-2.0) 를 사용합니다.<br>
-  <span class=contact>문의 · 오류 신고 — <a href="mailto:sebjang@gmail.com?subject=%5B%EC%A2%85%EC%86%8C%EC%84%B8%20%EA%B3%84%EC%82%B0%EA%B8%B0%5D%20%EB%AC%B8%EC%9D%98">sebjang@gmail.com</a> · (주)인흥 장세봉</span></div>
+  <span class=contact>문의 · 오류 신고 — <a href="mailto:sebjang@gmail.com?subject=%5B%EC%A2%85%EC%86%8C%EC%84%B8%20%EA%B3%84%EC%82%B0%EA%B8%B0%5D%20%EB%AC%B8%EC%9D%98">sebjang@gmail.com</a> · (주)인흥 장세봉</span><br>
+  <span class=contact>연구 기록 — <a href="https://blog.naver.com/sbchang" target="_blank" rel="noopener noreferrer">블로그</a> · <a href="https://cafe.naver.com/l2t" target="_blank" rel="noopener noreferrer">카페</a> · <a href="https://open.kakao.com/o/p5WB8ali" target="_blank" rel="noopener noreferrer">오픈채팅</a></span><br>
+  <span class=contact>(주)인흥 국제조세 데이터분석 검증 서비스 · 경상북도 구미시 1공단로 212, 한라시그마밸리 지식산업센터 815~816호 · 010-7753-1240</span></div>
 </div>
 </div>
 
@@ -722,7 +734,7 @@ function parseText(raw){
   var got=[]; for(var kk in F) if(F[kk]!=null && kk!=='form') got.push(kk);
   pmsg(F.year+'귀속 판독 완료 — 항목 '+got.length+'개 · Gross-up '+(gur*100)+'% · 검증기준 '+(Object.keys(BASE[F.year]).length-1)+'개'+(F.stmt?' (⑰ 계산서 포함 · '+(F.form||'?')+')':(F.stmtPartial?' (⑰ 부분 인식)':' (⑰ 미인식)')),'ok');
 }
-var BUILD='2026-08-27b';
+var BUILD='2026-08-28a';
 var GURLOCK=false;
 function pmsg(m,c){ var e=document.getElementById('pmsg');
   e.innerHTML='<span class="badge '+(c==='ok'?'b-ok':(c==='bad'?'b-bad':'b-mut'))+'">'+m+'</span>'+'<div style="font-size:10px;color:#8a97a2;margin-top:3px">build '+BUILD+'</div>'; }
