@@ -205,6 +205,7 @@ p.contact{ margin-top:-4px; font-size:11px; }
   PDF 판독에 Mozilla pdf.js (Apache-2.0) 를 사용합니다.<br>
   <span class=contact>문의 · 오류 신고 — <a href="mailto:sebjang@gmail.com?subject=%5B%EC%A2%85%EC%86%8C%EC%84%B8%20%EA%B3%84%EC%82%B0%EA%B8%B0%5D%20%EB%AC%B8%EC%9D%98">sebjang@gmail.com</a> · (주)인흥 장세봉</span><br>
   <span class=contact>연구 기록 — <a href="https://blog.naver.com/sbchang" target="_blank" rel="noopener noreferrer">블로그</a> · <a href="https://cafe.naver.com/l2t" target="_blank" rel="noopener noreferrer">카페</a> · <a href="https://open.kakao.com/o/p5WB8ali" target="_blank" rel="noopener noreferrer">오픈채팅</a></span><br>
+  <span class=contact id=integ></span><br>
   <span class=contact>(주)인흥 국제조세 데이터분석 검증 서비스 · 경상북도 구미시 1공단로 212, 한라시그마밸리 지식산업센터 815~816호 · 010-7753-1240</span></div>
 </div>
 </div>
@@ -734,6 +735,44 @@ function parseText(raw){
   var got=[]; for(var kk in F) if(F[kk]!=null && kk!=='form') got.push(kk);
   pmsg(F.year+'귀속 판독 완료 — 항목 '+got.length+'개 · Gross-up '+(gur*100)+'% · 검증기준 '+(Object.keys(BASE[F.year]).length-1)+'개'+(F.stmt?' (⑰ 계산서 포함 · '+(F.form||'?')+')':(F.stmtPartial?' (⑰ 부분 인식)':' (⑰ 미인식)')),'ok');
 }
+/* ── 산식 지문 (자기무결성 표시) ──
+   핵심 산식 세 가지 — 세율표(tbl) · 누진공제 적용(tax) · 비교과세 전개(run) —
+   의 소스를 그대로 읽어 지문을 만든다.  파일 어딘가가 바뀌어도
+   이 세 함수가 그대로면 지문은 같다.  세율이나 판정식을 손대면 즉시 달라진다.
+
+   이것은 보안장치가 아니다.  마음먹은 사람은 지문 상수까지 바꿀 수 있다.
+   목적은 (가) 실수로 깨진 배포본과 (나) 산식이 변형된 사본을
+   이용자가 눈으로 가려낼 수 있게 하는 것이다.
+   원본 지문은 배포 시 블로그에 함께 공개한다. */
+var LOGIC_HASH='6c0c04da';
+function logicSrc(){ try{ return String(tbl)+String(tax)+String(run)+String(RATE23)+String(RATE21); }catch(e){ return ''; } }
+function fnv1a(str){
+  var h=0x811c9dc5;
+  for(var i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=(h+((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24)))>>>0; }
+  return ('0000000'+h.toString(16)).slice(-8);
+}
+function integrityCheck(){
+  var cur=fnv1a(logicSrc());
+  var host=location.hostname;
+  var origin='sebjang.github.io';
+  var el=document.getElementById('integ');
+  if(!el) return;
+  var bad = (LOGIC_HASH!=='__PLACEHOLDER__' && cur!==LOGIC_HASH);
+  var copy = host && host!==origin && host!=='localhost' && host!=='127.0.0.1' && host!=='';
+  var txt='산식 지문 <code style="font-family:Consolas">'+cur+'</code>';
+  if(bad){
+    txt+=' — <b style="color:#b23a2e">원본과 다릅니다.</b> 세율표 또는 판정식이 변경된 사본입니다. '+
+         '원본은 <a href="https://'+origin+'/ROC_INNER_BASIS/">'+origin+'/ROC_INNER_BASIS/</a> 입니다.';
+    el.style.color='#b23a2e';
+  } else if(copy){
+    txt+=' — 이 페이지는 <b>'+host+'</b> 에서 제공되고 있습니다. '+
+         '원본은 <a href="https://'+origin+'/ROC_INNER_BASIS/">'+origin+'/ROC_INNER_BASIS/</a> 입니다.';
+  } else {
+    txt+=' — 원본 배포본';
+  }
+  el.innerHTML=txt;
+}
+
 var BUILD='2026-08-28a';
 var GURLOCK=false;
 function pmsg(m,c){ var e=document.getElementById('pmsg');
@@ -797,7 +836,7 @@ function stampPrint(){
 }
 window.addEventListener('beforeprint', stampPrint);
 document.getElementById('adjpanel').style.display='';
-presetDemo(); onYear();
+presetDemo(); onYear(); integrityCheck();
 if(pdfReady()){ pmsg("신고서 PDF 를 끌어놓으면 해당 연도 값과 검증 기준이 자동 등록된다.","mut"); }
 else { document.getElementById('drop').innerHTML='PDF 판독 꺼짐 — vendor/pdf.min.js 를 불러오지 못했다<br><span style="font-size:10px">아래 텍스트 붙여넣기를 사용할 것</span>';
        document.getElementById('drop').style.background='#fdf1ef';
