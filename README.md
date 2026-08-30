@@ -2,13 +2,13 @@
 
 재경부 예규-576 시행 이후 금융소득 종합과세 / 분리과세 비교과세 계산 SW
 
-**바로 쓰기 → https://sebjang.github.io/ROC_INNER_BASIS/**
+**바로 쓰기 → https://sebjang.github.io/ROC_BASIS_576/**
 
 | | |
 |---|---|
 | 배포 버전 | **BUILD 2026-08-28b** |
 | 산식 지문 | **`6c0c04da`** |
-| 원본 주소 | https://sebjang.github.io/ROC_INNER_BASIS/ |
+| 원본 주소 | https://sebjang.github.io/ROC_BASIS_576/ |
 
 ---
 
