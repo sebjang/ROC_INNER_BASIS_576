@@ -106,7 +106,7 @@ PDF 판독에 [Mozilla pdf.js](https://mozilla.github.io/pdf.js/) (Apache-2.0) �
 ## 연락
 
 (주)인흥 국제조세 데이터분석 검증 서비스 · 장세봉
-sebjang@gmail.com · 010-7753-1240
+inheung0801@gmail.com · 010-7753-1240
 경상북도 구미시 1공단로 212, 한라시그마밸리 지식산업센터 815~816호
 
 [블로그](https://blog.naver.com/sbchang) · [카페](https://cafe.naver.com/l2t) · [오픈채팅](https://open.kakao.com/o/p5WB8ali)
