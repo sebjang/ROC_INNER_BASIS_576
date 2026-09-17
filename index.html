@@ -154,7 +154,7 @@ p.contact{ margin-top:-4px; font-size:11px; }
     <div class="f hd"><label>재정경제부 예규 금융세제과-576 기반<br>ROC 취득가액 이내성 판정 <span style="font-weight:400;font-size:11px;color:#8a97a2">— 표기 전용</span></label><span></span></div>
     <div style="font-size:11px;color:var(--ink2);line-height:1.7;padding:6px 0 10px">
       <b>이내분</b> = MIN(누적ROC, 취득원가) … 원금반환, 과세 아님<br>
-      <b>의제배당</b> = MAX(0, 누적ROC − 취득원가) … 「소득세법」 §17① 의제배당<br>
+      <b>의제배당</b> = MAX(0, 누적ROC − 취득원가) … 「소득세법」 §17②1 의제배당<br>
       <span style="color:#8a97a2">누적 ROC 와 취득원가는 발행사 확정자료(8937 · ICI Primary · 1099-DIV)와
       증권사 원장에서 확인된 금액이어야 합니다. 본 계산기는 위 산식을 <b>표기만 하며</b> 판정하지 않습니다.
       산정된 이내분은 아래 「① ROC 취득가이내분 감액」에 사용자가 직접 입력하며,
@@ -163,7 +163,7 @@ p.contact{ margin-top:-4px; font-size:11px; }
     <div id=adjpanel style="display:none">
     <div class="f hd"><label>경정 시나리오 (경정열에만 반영)</label><span></span></div>
     <div class=f><label>① ROC 취득가이내분 <span style="color:#1a7a3c;font-weight:700">감액</span><br><span style="font-size:10px;color:#8a97a2">배당 — 그 외에서 차감 (과표 ↓)</span></label><input id=roc value="0" oninput="calc()"></div>
-    <div class=f><label>② 배당 — 그 외 <span style="color:#b23a2e;font-weight:700">증액</span><br><span style="font-size:10px;color:#8a97a2">취득가액 <b>초과분 의제배당</b> 과세분 반영 「소득세법」 §17①<br>양수 = 배당 증가 · 음수 = 감소 (과표 ↑↓)<br>정본 신고에 이미 배당으로 계상된 경우 이중계상에 주의</span></label><input id=divoadj value="0" oninput="calc()"></div>
+    <div class=f><label>② 배당 — 그 외 <span style="color:#b23a2e;font-weight:700">증액</span><br><span style="font-size:10px;color:#8a97a2">취득가액 <b>초과분 의제배당</b> 과세분 반영 「소득세법」 §17②1<br>양수 = 배당 증가 · 음수 = 감소 (과표 ↑↓)<br>정본 신고에 이미 배당으로 계상된 경우 이중계상에 주의</span></label><input id=divoadj value="0" oninput="calc()"></div>
     <div class=f><label>③ 배당 원천세 과다징수 <span style="color:#1a7a3c;font-weight:700">감액</span><br><span style="font-size:10px;color:#8a97a2">기납부에서 차감 · ① 의 짝항목</span></label><input id=rocw value="0" oninput="calc()"></div>
     <div class=f><label>④ 외국납부세액공제 <span style="color:#b23a2e;font-weight:700">증액</span><br><span style="font-size:10px;color:#8a97a2">§57 · 당초 누락분 (세액공제 ↑)</span></label><input id=ftcadd value="0" oninput="calc()"></div>
     <div class=f><label>⑤ 그 밖의 세액공제 <span style="color:#b23a2e;font-weight:700">증액</span></label><input id=etcadd value="0" oninput="calc()"></div>
